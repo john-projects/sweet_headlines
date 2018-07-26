@@ -1,11 +1,11 @@
 # -*- coding:utf-8 -*-
 # __author__: MaoYong
-from spiders.common.spider import Spider
+from spiders.common.base_spider import BaseSpider
 import re
 import json
 
 
-class TXSpider(Spider):
+class TXSpider(BaseSpider):
     def __init__(self):
         super(TXSpider, self).__init__()
         self.omn_api_url = ('http://openapi.inews.qq.com/getQQNewsNormalContent?id={}&chlid=news_rss&refer='
@@ -84,7 +84,8 @@ class TXSpider(Spider):
 
             if not news_info_dict:
                 continue
-
+            # print('news_info_dict["news_text_p_list"]:{}'.format(news_info_dict["news_text_p_list"]))
+            print('news_info_dict["news_text_p_list"]:{}'.format(len(news_info_dict["news_text_p_list"])))
             save_dict = {
                 "title": news_info_dict["title"],
                 "news_url": url,
@@ -134,7 +135,7 @@ class TXSpider(Spider):
                     # img_path = self.save_img(replace_str.group(1))
                     img_path = self.save_img(img_url)
                     news_text_p = re.sub(replace_str.group(1), 'http://www.sweeth.cn/' + img_path, str(news_text_p))
-                news_text_p_list.append(news_text_p)
+                news_text_p_list.append(str(news_text_p))
                 continue
             if news_text_p.string:
                 news_text_p_list.append(str(news_text_p))

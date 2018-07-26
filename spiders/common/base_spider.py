@@ -11,13 +11,13 @@ import datetime
 import time
 import uuid
 import os
-from init_server import get_logging, get_db_session, news_id_set
-from model.news import NewsInfo, NewsText
+from app.init_server import get_logging, get_db_session, news_id_set
+from app.model.news import NewsInfo, NewsText
 
 logging = get_logging("spider_base.log")
 
 
-class Spider(object):
+class BaseSpider(object):
     def __init__(self):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 '
@@ -47,6 +47,12 @@ class Spider(object):
             return False
 
     def save_img(self, img_url):
+        """
+        保存抓取的图片
+
+        :param img_url:
+        :return:
+        """
         now_datetime = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
         img_path = now_datetime.strftime("img/%Y%m/%d/")
         img_name = img_path + "%s.jpg" % str(uuid.uuid4()).replace('-', '')
@@ -70,6 +76,12 @@ class Spider(object):
         return ''
 
     def get_news_introduction(self, news_text_p_list):
+        """
+        获取新闻简介：
+            如果一个 P 标签内的内容不超过250个字符，则直接保存，如果超过，则取前240个字符，后面内容以 ... 代替
+        :param news_text_p_list:
+        :return:
+        """
         if not news_text_p_list or not isinstance(news_text_p_list, list):
             return ''
 

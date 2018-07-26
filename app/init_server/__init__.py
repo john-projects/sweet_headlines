@@ -10,7 +10,7 @@ import pymysql
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
-from config import DefaultDbConfig as config
+from app.config import DefaultDbConfig as config
 import logging
 
 
@@ -48,11 +48,11 @@ def get_db_session():
 
 def get_news_id_set():
     db_session = get_db_session()
-    from model.news import NewsInfo
+    from app.model.news import NewsInfo
     news_id_list = [news_info.news_id for news_info in db_session.query(NewsInfo.news_id).all()]
     return set(news_id_list)
 
 
 BaseModel = declarative_base()
 news_id_set = get_news_id_set()
-print(news_id_set)
+# print(news_id_set)

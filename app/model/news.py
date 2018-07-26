@@ -8,7 +8,7 @@
 
 from sqlalchemy import Column
 from sqlalchemy.types import Integer, String, Text
-from init_server import BaseModel
+from app.init_server import BaseModel
 
 
 class NewsInfo(BaseModel):
