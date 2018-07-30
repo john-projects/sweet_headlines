@@ -53,9 +53,10 @@ class BaseSpider(object):
         :param img_url:
         :return:
         """
+        img_suffix = img_url.split(".")[-1]
         now_datetime = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
         img_path = now_datetime.strftime("img/%Y%m/%d/")
-        img_name = img_path + "%s.jpg" % str(uuid.uuid4()).replace('-', '')
+        img_name = img_path + "%s." % str(uuid.uuid4()).replace('-', '') + img_suffix
 
         if not os.path.exists(img_path):
             os.makedirs(img_path)
@@ -94,26 +95,11 @@ class BaseSpider(object):
         first_p = first_p_list[0][:240] + '...' + '</p>'
         return first_p
 
-    # def _save_news(self, title, news_url, ep_source, editor, news_text):
     def save_news(self, news_dict):
-        url_list = news_dict.get("news_url", "").split("/")
-        if len(url_list) < 3:
-            return
-
-        if url_list[-3] == "a":
-            news_id = url_list[-2] + url_list[-1].split(".")[0]
-        elif url_list[-3] == "omn":
-            news_id = url_list[-1].split(".")[0]
-        else:
-            return
-
-        if news_id in news_id_set:
-            return
-
         news_info = NewsInfo(
             add_time=int(time.time()),
             news_time=int(time.time()),
-            news_id=news_id,
+            news_id=news_dict.get("news_id", ""),
             title=news_dict.get("title", ""),
             news_web_source=news_dict.get("news_web_source", ""),
             news_web_source_url=news_dict.get("news_url", ""),
@@ -123,7 +109,7 @@ class BaseSpider(object):
         )
 
         news_text = NewsText(
-            news_id=news_id,
+            news_id=news_dict.get("news_id", ""),
             news_text=news_dict.get("news_text")
         )
 

@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 # __author__: MaoYong
-from spiders.common.base_spider import BaseSpider
+from spiders.common.base_spider import BaseSpider, news_id_set
 import re
 import json
 
@@ -52,7 +52,11 @@ class TXSpider(BaseSpider):
 
         for news_dict in news_dict_list:
             url = news_dict["url"]
-            title = news_dict["title"]
+
+            # 如果news已在数据库中存在，则排除掉此条url
+            news_id = self.get_news_id(url)
+            if not news_id:
+                continue
 
             print("Starting -- url: %s" % url)
             news_info_soup = self.get_soup_html(url)
@@ -208,6 +212,23 @@ class TXSpider(BaseSpider):
             "news_text_p_list": news_text_p_list,
             "news_type": '',
         }
+
+    def get_news_id(self, news_url):
+        url_list = news_url.split("/")
+        if len(url_list) < 3:
+            return
+
+        if url_list[-3] == "a":
+            news_id = url_list[-2] + url_list[-1].split(".")[0]
+        elif url_list[-3] == "omn":
+            news_id = url_list[-1].split(".")[0]
+        else:
+            return
+
+        if news_id in news_id_set:
+            return
+
+        return news_id
 
     def run(self, index_url):
 
