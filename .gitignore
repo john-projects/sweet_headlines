@@ -1,0 +1,3 @@
+#.gitignore for java
+__pycache__
+.idea
