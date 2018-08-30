@@ -5,7 +5,8 @@
 # Time: 
 # description:
 import re
-from spiders.common.base_spider import BaseSpider, news_id_set
+from spiders.common.base_spider import BaseSpider
+from app.init_server import news_id_set
 import asyncio
 
 

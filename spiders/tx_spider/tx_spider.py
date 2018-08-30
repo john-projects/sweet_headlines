@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 # __author__: MaoYong
-from spiders.common.base_spider import BaseSpider, news_id_set
+from spiders.common.base_spider import BaseSpider
+from app.init_server import news_id_set
 import re
 import json
 import asyncio

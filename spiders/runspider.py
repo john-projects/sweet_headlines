@@ -4,6 +4,9 @@
 # Author: Maoyong
 # Time: 2018/8/14 16:52
 # description:
+import sys
+sys.path.append("/john/dreams/sweet_headlines")
+sys.path.append(r"C:\Users\66439\Desktop\dreams\sweet_headlines")
 from spiders.tx_spider.tx_spider import TXSpider
 from spiders.wy_spider.wy_spider import WYSpider
 import asyncio
