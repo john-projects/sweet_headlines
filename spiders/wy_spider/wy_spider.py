@@ -20,8 +20,6 @@ class WYSpider(BaseSpider):
         for news_url_li in news_url_li_list:
             news_url = news_url_li.a.get("href")
             title = news_url_li.a.string
-            # url_info = re.search(r"http://news.163.com/(\d{2})/(\d{4})/(\d{2})/(\w*?).html", news_url)
-            # if url_info:
             yield {
                 "title": title,
                 "url": news_url,
@@ -50,7 +48,6 @@ class WYSpider(BaseSpider):
             if attrs_dict.get("class") == ['f_center']:
                 replace_str = re.search(r' src="(.*?)"', str(news_text_p))
                 if replace_str:
-                    # img_url = "http:" + replace_str.group(1)
                     img_url = replace_str.group(1)
                     img_name = await self.save_img(img_url)
                     img_path = 'http://www.sweeth.cn/' + img_name
@@ -82,7 +79,8 @@ class WYSpider(BaseSpider):
         }
         self.save_news(save_dict)
 
-    def get_news_id(self, news_url):
+    @staticmethod
+    def get_news_id(news_url):
         url_list = news_url.split("/")
         if len(url_list) != 7:
             return
@@ -112,10 +110,6 @@ if __name__ == "__main__":
 
     url = "http://www.163.com/"
     wy_spider = WYSpider()
-    # wy_spider.run(url)
-    # img_url = 'http://cms-bucket.nosdn.127.net/catchpic/e/e0/e07daa0b4ecb4b14a2cf2db0898cf603.jpg?imageView&amp;thumbnail=550x0'
-    # wy_spider.save_img(img_url)
-    # tasks1 = [wy_spider.save_img(img_url)]
 
     loop = asyncio.get_event_loop()
     tasks = [wy_spider.run(url, loop)]

@@ -3,7 +3,6 @@
 from spiders.common.base_spider import BaseSpider, news_id_set
 import re
 import json
-import threading
 import asyncio
 
 
@@ -128,8 +127,6 @@ class TXSpider(BaseSpider):
                 replace_str = re.search(r'src="(.*?)"', str(news_text_p))
                 if replace_str:
                     img_url = "https:" + replace_str.group(1)
-
-                    # img_path = self.save_img(replace_str.group(1))
                     img_path = await self.save_img(img_url)
                     news_text_p = re.sub(replace_str.group(1), 'http://www.sweeth.cn/' + img_path, str(news_text_p))
                 news_text_p_list.append(str(news_text_p))
@@ -206,7 +203,8 @@ class TXSpider(BaseSpider):
             "news_type": '',
         }
 
-    def get_news_id(self, news_url):
+    @staticmethod
+    def get_news_id(news_url):
         url_list = news_url.split("/")
         if len(url_list) < 3:
             return

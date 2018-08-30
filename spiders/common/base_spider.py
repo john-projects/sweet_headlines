@@ -8,13 +8,11 @@
 import requests
 from bs4 import BeautifulSoup
 import datetime
-import time
 import uuid
 import os
-from app.init_server import get_logging, get_db_session, news_id_set
+from app.init_server import get_logging, get_db_session
 from app.model.news import NewsInfo, NewsText
 import aiohttp
-import chardet
 
 
 logging = get_logging("spider_base.log")
@@ -49,21 +47,11 @@ class BaseSpider(object):
                 soup = BeautifulSoup(text, "html.parser")
                 return soup
 
-        # soup = BeautifulSoup(text, "html.parser")
-        # return soup
-
     async def get_body_html(self, url):
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=self.headers) as resp:
                 text = await resp.text(errors='ignore')
                 return text
-
-        # try:
-        #     result = requests.get(url=url, headers=self.headers, timeout=5, stream=True)
-        #     return result
-        # except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as err:
-        #     logging.warning(err)
-        #     return False
 
     async def save_img(self, img_url):
         """
@@ -134,24 +122,6 @@ class BaseSpider(object):
 
         self.db_session.add(news_info)
         self.db_session.add(news_text)
-
-    # async def get_index_news(self, *args, **kwargs):
-    #     yield
-    #
-    # async def get_news_info(self, *args, **kwargs):
-    #     pass
-    #
-    # async def run(self, index_url, loop):
-    #     news_dict_list = []
-    #
-    #     async for news_dict in self.get_index_news(index_url):
-    #         news_dict_list.append(news_dict)
-    #         print(news_dict)
-    #
-    #     tasks = [loop.create_task(self.get_news_info(news_dict)) for news_dict in news_dict_list]
-    #     await asyncio.wait(tasks)
-    #
-    #     self.commit()
 
     def commit(self):
         self.db_session.commit()
