@@ -13,6 +13,9 @@ import uuid
 import os
 from app.init_server import get_logging, get_db_session, news_id_set
 from app.model.news import NewsInfo, NewsText
+import aiohttp
+import chardet
+
 
 logging = get_logging("spider_base.log")
 
@@ -27,10 +30,11 @@ class BaseSpider(object):
             'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4'
         }
         self.db_session = get_db_session()
+        self.http_session = requests.session()
 
-    def get_soup_html(self, url):
+    def get_soup_html_old(self, url):
         try:
-            result = requests.get(url=url, headers=self.headers, timeout=5, stream=True)
+            result = self.http_session.get(url=url, headers=self.headers, timeout=5, stream=True)
             soup = BeautifulSoup(result.text, "html.parser")
         except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as err:
             logging.warning(err)
@@ -38,15 +42,30 @@ class BaseSpider(object):
 
         return soup
 
-    def get_body_html(self, url):
-        try:
-            result = requests.get(url=url, headers=self.headers, timeout=5, stream=True)
-            return result
-        except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as err:
-            logging.warning(err)
-            return False
+    async def get_soup_html(self, url):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=self.headers) as resp:
+                text = await resp.text(errors='ignore')
+                soup = BeautifulSoup(text, "html.parser")
+                return soup
 
-    def save_img(self, img_url):
+        # soup = BeautifulSoup(text, "html.parser")
+        # return soup
+
+    async def get_body_html(self, url):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=self.headers) as resp:
+                text = await resp.text(errors='ignore')
+                return text
+
+        # try:
+        #     result = requests.get(url=url, headers=self.headers, timeout=5, stream=True)
+        #     return result
+        # except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as err:
+        #     logging.warning(err)
+        #     return False
+
+    async def save_img(self, img_url):
         """
         保存抓取的图片
 
@@ -54,27 +73,27 @@ class BaseSpider(object):
         :return:
         """
         img_suffix = img_url.split(".")[-1]
+        # 如果找到后缀不是图片后缀则设置为默认值 jpg
+        if img_suffix.lower() not in ("jpg", "gif", "png"):
+            img_suffix = "jpg"
         now_datetime = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
         img_path = now_datetime.strftime("img/%Y%m/%d/")
-        img_name = img_path + "%s." % str(uuid.uuid4()).replace('-', '') + img_suffix
+        img_name = img_path + "111%s." % str(uuid.uuid4()).replace('-', '') + img_suffix
 
         if not os.path.exists(img_path):
             os.makedirs(img_path)
-
         try:
-            html_source = requests.get(url=img_url, headers=self.headers, timeout=5, stream=True)
-        except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as err:
-            logging.warning(err)
-            return ''
-
-        if not html_source:
-            return ''
-
-        if html_source.status_code == 200:
-            with open(img_name, "wb") as fp:
-                fp.write(html_source.content)
-            return img_name
-        return ''
+            async with aiohttp.ClientSession() as session:
+                async with session.get(img_url) as resp:
+                    content = await resp.read()
+                    if resp.status == 200:
+                        with open(img_name, "wb") as fp:
+                            fp.write(content)
+                        return img_name
+                    else:
+                        return ""
+        except Exception as err:
+            return ""
 
     def get_news_introduction(self, news_text_p_list):
         """
@@ -116,5 +135,38 @@ class BaseSpider(object):
         self.db_session.add(news_info)
         self.db_session.add(news_text)
 
+    # async def get_index_news(self, *args, **kwargs):
+    #     yield
+    #
+    # async def get_news_info(self, *args, **kwargs):
+    #     pass
+    #
+    # async def run(self, index_url, loop):
+    #     news_dict_list = []
+    #
+    #     async for news_dict in self.get_index_news(index_url):
+    #         news_dict_list.append(news_dict)
+    #         print(news_dict)
+    #
+    #     tasks = [loop.create_task(self.get_news_info(news_dict)) for news_dict in news_dict_list]
+    #     await asyncio.wait(tasks)
+    #
+    #     self.commit()
+
     def commit(self):
         self.db_session.commit()
+
+
+if __name__ == "__main__":
+    import time, asyncio
+    start_time = time.time()
+
+    url = "https://news.163.com/18/0828/02/DQ8UHBO100018AOP.html"
+    # url = "http://www.163.com/"
+    wy_spider = BaseSpider()
+    loop = asyncio.get_event_loop()
+    tasks = [wy_spider.get_soup_html(url)]
+    loop.run_until_complete(asyncio.wait(tasks))
+    loop.close()
+
+    print("Time:{}".format(time.time()-start_time))
