@@ -14,4 +14,4 @@ class DefaultDbConfig(object):
     SQLALCHEMY_POOL_SIZE = 5
     SQLALCHEMY_ECHO = False
     # 本地连接测试数据库
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:Mao664390905@47.88.63.102/news?charset=utf8'
+    SQLALCHEMY_DATABASE_URI = 'mysql://root:Mao664390905@127.0.0.1/news?charset=utf8'
