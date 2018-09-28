@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 @author: my
 @license: (C) Copyright 2013-2017
@@ -11,19 +12,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from app.config import DefaultDbConfig as config
-import logging
-
-
-def get_logging(filename):
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(thread)d %(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S',
-                        filename=filename,
-                        filemode='a')
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-
-    return logging
 
 
 pymysql.install_as_MySQLdb()

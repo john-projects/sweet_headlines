@@ -8,9 +8,14 @@ import re
 from spiders.common.base_spider import BaseSpider
 from app.init_server import news_id_set
 import asyncio
+from app.config.logging.default import get_logging
 
 
 class WYSpider(BaseSpider):
+    def __init__(self):
+        super(WYSpider, self).__init__()
+        self.logging = get_logging(__name__)
+
     async def get_index_news(self, index_url):
         soup = await self.get_soup_html(url=index_url)
         if not soup:
@@ -34,7 +39,7 @@ class WYSpider(BaseSpider):
         if not news_id:
             return
 
-        print("Starting -- url: %s" % news_dict["url"])
+        self.logging.info("Starting -- url: %s" % news_dict["url"])
         news_info_soup = await self.get_soup_html(url)
         if not news_info_soup:
             return
@@ -94,10 +99,9 @@ class WYSpider(BaseSpider):
 
     async def run(self, index_url, loop):
         news_dict_list = []
-
         async for news_dict in self.get_index_news(index_url):
             news_dict_list.append(news_dict)
-            print(news_dict)
+            self.logging.info(news_dict)
 
         tasks = [loop.create_task(self.get_news_info(news_dict)) for news_dict in news_dict_list]
         await asyncio.wait(tasks)
@@ -117,4 +121,4 @@ if __name__ == "__main__":
     loop.run_until_complete(asyncio.wait(tasks))
     loop.close()
 
-    print("Time:{}".format(time.time()-start_time))
+    wy_spider.logging.info("Time:{}".format(time.time()-start_time))

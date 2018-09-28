@@ -5,6 +5,7 @@ from app.init_server import news_id_set
 import re
 import json
 import asyncio
+from app.config.logging.default import get_logging
 
 
 class TXSpider(BaseSpider):
@@ -12,6 +13,7 @@ class TXSpider(BaseSpider):
         super(TXSpider, self).__init__()
         self.omn_api_url = ('http://openapi.inews.qq.com/getQQNewsNormalContent?id={}&chlid=news_rss&refer='
                             'mobilewwwqqcom&ext_data=all&srcfrom=newsapp&callback=getNewsContentOnlyOutput')
+        self.logging = get_logging(__name__)
 
     async def get_index_news(self, index_url):
         soup = await self.get_soup_html(url=index_url)
@@ -32,7 +34,6 @@ class TXSpider(BaseSpider):
             yield {
                 "title": sub_hot_news_li.a.string,
                 "url": sub_hot_news_li.a.get("href"),
-
             }
 
         # 其他头条
@@ -51,7 +52,7 @@ class TXSpider(BaseSpider):
         if not news_id:
             return
 
-        print("Starting -- url: %s" % url)
+        self.logging.info("Starting -- url: %s" % url)
         news_info_soup = await self.get_soup_html(url)
         if not news_info_soup:
             return
@@ -227,7 +228,7 @@ class TXSpider(BaseSpider):
 
         async for news_dict in self.get_index_news(index_url):
             news_dict_list.append(news_dict)
-            print(news_dict)
+            self.logging.info(news_dict)
 
         tasks = [loop.create_task(self.get_news_info(news_dict)) for news_dict in news_dict_list]
         await asyncio.wait(tasks)
@@ -246,4 +247,4 @@ if __name__ == "__main__":
     loop.run_until_complete(asyncio.wait(tasks))
     loop.close()
 
-    print("Time:{}".format(time.time()-start_time))
+    tx_spider.logging.info("Time:{}".format(time.time()-start_time))

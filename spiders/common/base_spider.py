@@ -10,12 +10,16 @@ from bs4 import BeautifulSoup
 import datetime
 import uuid
 import os
-from app.init_server import get_logging, get_db_session
+import time
+from app.init_server import get_db_session
 from app.model.news import NewsInfo, NewsText
 import aiohttp
+from app.config.logging.default import get_logging
 
+spider_logging = get_logging('base_spider.log')
 
-logging = get_logging("spider_base.log")
+run_msg = "{} starting...".format(datetime.datetime.utcnow()+datetime.timedelta(hours=8))
+spider_logging.info(run_msg)
 
 
 class BaseSpider(object):
@@ -30,28 +34,26 @@ class BaseSpider(object):
         self.db_session = get_db_session()
         self.http_session = requests.session()
 
-    def get_soup_html_old(self, url):
-        try:
-            result = self.http_session.get(url=url, headers=self.headers, timeout=5, stream=True)
-            soup = BeautifulSoup(result.text, "html.parser")
-        except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as err:
-            logging.warning(err)
-            return False
-
-        return soup
-
     async def get_soup_html(self, url):
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=self.headers) as resp:
-                text = await resp.text(errors='ignore')
-                soup = BeautifulSoup(text, "html.parser")
-                return soup
+            try:
+                async with session.get(url, headers=self.headers) as resp:
+                    text = await resp.text(errors='ignore')
+                    soup = BeautifulSoup(text, "html.parser")
+                    return soup
+            except Exception as err:
+                spider_logging.debug(err)
+                return
 
     async def get_body_html(self, url):
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=self.headers) as resp:
-                text = await resp.text(errors='ignore')
-                return text
+            try:
+                async with session.get(url, headers=self.headers) as resp:
+                    text = await resp.text(errors='ignore')
+                    return text
+            except Exception as err:
+                spider_logging.debug(err)
+                return
 
     async def save_img(self, img_url):
         """
@@ -81,7 +83,8 @@ class BaseSpider(object):
                     else:
                         return ""
         except Exception as err:
-            return ""
+            spider_logging.debug(err)
+            return
 
     def get_news_introduction(self, news_text_p_list):
         """
@@ -103,32 +106,34 @@ class BaseSpider(object):
         return first_p
 
     def save_news(self, news_dict):
-        news_info = NewsInfo(
-            add_time=int(time.time()),
-            news_time=int(time.time()),
-            news_id=news_dict.get("news_id", ""),
-            title=news_dict.get("title", ""),
-            news_web_source=news_dict.get("news_web_source", ""),
-            news_web_source_url=news_dict.get("news_url", ""),
-            ep_source=news_dict.get("ep_source", ""),
-            editor=news_dict.get("editor", ""),
-            news_introduction=news_dict.get("news_introduction", ""),
-        )
-
-        news_text = NewsText(
-            news_id=news_dict.get("news_id", ""),
-            news_text=news_dict.get("news_text")
-        )
-
-        self.db_session.add(news_info)
-        self.db_session.add(news_text)
+        try:
+            news_info = NewsInfo(
+                add_time=int(time.time()),
+                news_time=int(time.time()),
+                news_id=news_dict.get("news_id", ""),
+                title=news_dict.get("title", ""),
+                news_web_source=news_dict.get("news_web_source", ""),
+                news_web_source_url=news_dict.get("news_url", ""),
+                ep_source=news_dict.get("ep_source", ""),
+                editor=news_dict.get("editor", ""),
+                news_introduction=news_dict.get("news_introduction", ""),
+            )
+            news_text = NewsText(
+                news_id=news_dict.get("news_id", ""),
+                news_text=news_dict.get("news_text")
+            )
+            self.db_session.add(news_info)
+            self.db_session.add(news_text)
+        except Exception as err:
+            spider_logging.debug(err)
+            self.db_session.remove()
 
     def commit(self):
         self.db_session.commit()
 
 
 if __name__ == "__main__":
-    import time, asyncio
+    import asyncio
     start_time = time.time()
 
     url = "https://news.163.com/18/0828/02/DQ8UHBO100018AOP.html"
