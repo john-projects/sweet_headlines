@@ -8,7 +8,7 @@ import logging
 import os
 
 
-current_path = os.getcwd()
+current_path = os.path.dirname(os.path.abspath(__file__))
 
 spider_path = current_path+"/spider_log"
 if not os.path.exists(spider_path):
