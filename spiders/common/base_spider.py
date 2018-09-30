@@ -14,9 +14,10 @@ import time
 from app.init_server import get_db_session
 from app.model.news import NewsInfo, NewsText
 import aiohttp
-from app.config.logging.default import get_logging
+from app.config.logging.default import get_logging, get_img_path
 
 spider_logging = get_logging('base_spider.log')
+img_path = get_img_path()
 
 run_msg = "{} starting...".format(datetime.datetime.utcnow()+datetime.timedelta(hours=8))
 spider_logging.info(run_msg)
@@ -66,10 +67,7 @@ class BaseSpider(object):
         # 如果找到后缀不是图片后缀则设置为默认值 jpg
         if img_suffix.lower() not in ("jpg", "gif", "png"):
             img_suffix = "jpg"
-        now_datetime = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
-        img_path = now_datetime.strftime("img/%Y%m/%d/")
-        img_name = img_path + "111%s." % str(uuid.uuid4()).replace('-', '') + img_suffix
-
+        img_name = '{}{}.{}'.format(img_path, str(uuid.uuid4()).replace('-', ''), img_suffix)
         if not os.path.exists(img_path):
             os.makedirs(img_path)
         try:
