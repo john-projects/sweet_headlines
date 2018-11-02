@@ -15,3 +15,4 @@ class DefaultDbConfig(object):
     SQLALCHEMY_ECHO = False
     # 本地连接测试数据库
     SQLALCHEMY_DATABASE_URI = "mysql://root:Mao664390905@127.0.0.1/news?charset=utf8"
+    # SQLALCHEMY_DATABASE_URI = "mysql://root:Mao664390905@192.168.33.10/news?charset=utf8"

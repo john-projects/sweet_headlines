@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 # __author__: MaoYong
 from spiders.common.base_spider import BaseSpider
-from app.init_server import news_id_set
 import re
 import json
 import asyncio
@@ -205,8 +204,7 @@ class TXSpider(BaseSpider):
             "news_type": '',
         }
 
-    @staticmethod
-    def get_news_id(news_url):
+    def get_news_id(self, news_url):
         url_list = news_url.split("/")
         if len(url_list) < 3:
             return
@@ -218,7 +216,7 @@ class TXSpider(BaseSpider):
         else:
             return
 
-        if news_id in news_id_set:
+        if news_id in self.news_id_list:
             return
 
         return news_id
@@ -239,7 +237,7 @@ class TXSpider(BaseSpider):
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    url = "http://news.qq.com/"
+    url = "http://get_news.qq.com/"
     tx_spider = TXSpider()
 
     loop = asyncio.get_event_loop()

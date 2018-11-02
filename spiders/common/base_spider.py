@@ -11,7 +11,7 @@ import datetime
 import uuid
 import os
 import time
-from app.init_server import get_db_session
+from app.init_server.init_server import get_db_session
 from app.model.news import NewsInfo, NewsText
 import aiohttp
 from app.config.logging.default import get_logging, get_img_path
@@ -34,11 +34,12 @@ class BaseSpider(object):
         }
         self.db_session = get_db_session()
         self.http_session = requests.session()
+        self.news_id_list = self.get_news_id_set()
 
     async def get_soup_html(self, url):
         async with aiohttp.ClientSession() as session:
             try:
-                async with session.get(url, headers=self.headers) as resp:
+                async with session.get(url, headers=self.headers, verify_ssl=False) as resp:
                     text = await resp.text(errors='ignore')
                     soup = BeautifulSoup(text, "html.parser")
                     return soup
@@ -49,12 +50,17 @@ class BaseSpider(object):
     async def get_body_html(self, url):
         async with aiohttp.ClientSession() as session:
             try:
-                async with session.get(url, headers=self.headers) as resp:
+                async with session.get(url, headers=self.headers, verify_ssl=False) as resp:
                     text = await resp.text(errors='ignore')
                     return text
             except Exception as err:
                 spider_logging.debug(err)
                 return
+
+    def get_news_id_set(self):
+        db_session = get_db_session()
+        news_id_list = [news_info.news_id for news_info in db_session.query(NewsInfo.news_id).all()]
+        return set(news_id_list)
 
     async def save_img(self, img_url):
         """
@@ -134,11 +140,10 @@ if __name__ == "__main__":
     import asyncio
     start_time = time.time()
 
-    url = "https://news.163.com/18/0828/02/DQ8UHBO100018AOP.html"
-    # url = "http://www.163.com/"
-    wy_spider = BaseSpider()
+    url = "http://www.163.com/"
+    spider = BaseSpider()
     loop = asyncio.get_event_loop()
-    tasks = [wy_spider.get_soup_html(url)]
+    tasks = [spider.get_soup_html(url)]
     loop.run_until_complete(asyncio.wait(tasks))
     loop.close()
 

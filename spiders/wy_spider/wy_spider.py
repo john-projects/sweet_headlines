@@ -6,7 +6,6 @@
 # description:
 import re
 from spiders.common.base_spider import BaseSpider
-from app.init_server import news_id_set
 import asyncio
 from app.config.logging.default import get_logging
 
@@ -85,14 +84,13 @@ class WYSpider(BaseSpider):
         }
         self.save_news(save_dict)
 
-    @staticmethod
-    def get_news_id(news_url):
+    def get_news_id(self, news_url):
         url_list = news_url.split("/")
         if len(url_list) != 7:
             return
 
         news_id = url_list[-1].split(".")[0]
-        if news_id in news_id_set:
+        if news_id in self.news_id_list:
             return
 
         return news_id

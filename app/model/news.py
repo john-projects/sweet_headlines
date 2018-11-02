@@ -8,7 +8,9 @@
 
 from sqlalchemy import Column
 from sqlalchemy.types import Integer, String, Text
-from app.init_server import BaseModel
+from sqlalchemy.ext.declarative import declarative_base
+
+BaseModel = declarative_base()
 
 
 class NewsInfo(BaseModel):
